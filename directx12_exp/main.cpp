@@ -3,6 +3,8 @@
 
 #include <d3d12.h>
 
+#include "DXLayer.h"
+
 // mostly winapi stuff 
 
 // debug helpers
@@ -149,6 +151,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 		MessageBox(0, L"Window initialization failed", L"Error", MB_OK);
 		return 0;
 	}
+
+	if (!DXLayer::InitD3D(hWnd, width, height, is_fullscreen))
+	{
+		MessageBox(0, L"Failed to initialize D3D12", L"Error", MB_OK);
+		DXLayer::Cleanup();
+		return 1;
+	}
+
+	DXLayer::WaitForPreviousFrame();
+
+	CloseHandle(DXLayer::fence_event);
 
 	MainLoop();
 }

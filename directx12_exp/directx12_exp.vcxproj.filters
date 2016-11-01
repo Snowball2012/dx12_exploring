@@ -16,15 +16,24 @@
     <Filter Include="3rdparty">
       <UniqueIdentifier>{5d73cf01-2da9-4bf9-900b-fde78b9fa53b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dx12layer">
+      <UniqueIdentifier>{c37ec26f-d86b-4e58-b3aa-563cd92cdcf3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="DXLayer.cpp">
+      <Filter>dx12layer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dx12.h">
       <Filter>3rdparty</Filter>
+    </ClInclude>
+    <ClInclude Include="DXLayer.h">
+      <Filter>dx12layer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
