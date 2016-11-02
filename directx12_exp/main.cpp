@@ -39,7 +39,10 @@ namespace
 			if (wParam == VK_ESCAPE) {
 				if (MessageBox(0, L"Are you sure you want to exit?",
 					L"Really?", MB_YESNO | MB_ICONQUESTION) == IDYES)
+				{
 					DestroyWindow(hwnd);
+					PostQuitMessage(0);
+				}
 			}
 			return 0;
 
@@ -115,7 +118,7 @@ namespace
 		return true;
 	}
 
-	void MainLoop()
+	bool MainLoop()
 	{
 		MSG msg;
 		ZeroMemory(&msg, sizeof(MSG));
@@ -133,8 +136,14 @@ namespace
 			else
 			{
 				// run game code
+				if (!DXLayer::Update())
+					return false;
+				if (!DXLayer::Render())
+					return false;
 			}
 		}
+
+		return true;
 	}
 }
 
@@ -159,9 +168,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 		return 1;
 	}
 
-	DXLayer::WaitForPreviousFrame();
+	if (!MainLoop())
+		return 1;
+
+	if (!DXLayer::WaitForPreviousFrame())
+		return 1;
 
 	CloseHandle(DXLayer::fence_event);
 
-	MainLoop();
+	return 0;
 }
