@@ -10,9 +10,9 @@
 // debug helpers
 // todo: move from main.cpp
 #ifdef _DEBUG
-	#define NOTIMPL _ASSERT_EXPR(false, L"not implemented yet") 
+#define NOTIMPL _ASSERT_EXPR(false, L"not implemented yet") 
 #else
-	#define NOTIMPL
+#define NOTIMPL
 #endif
 
 // global winapi vars
@@ -27,69 +27,70 @@ LPCTSTR WindowTitle = L"DirectX12 exploring";
 namespace
 {
 	// callback function for windows messages
-	LRESULT CALLBACK WndProc(HWND hwnd,
+	LRESULT CALLBACK WndProc( HWND hwnd,
 		UINT msg,
 		WPARAM wParam,
-		LPARAM lParam)
+		LPARAM lParam )
 	{
-		switch (msg)
+		switch ( msg )
 		{
 
 		case WM_KEYDOWN:
-			if (wParam == VK_ESCAPE) {
-				if (MessageBox(0, L"Are you sure you want to exit?",
-					L"Really?", MB_YESNO | MB_ICONQUESTION) == IDYES)
+			if ( wParam == VK_ESCAPE )
+			{
+				if ( MessageBox( 0, L"Are you sure you want to exit?",
+					L"Really?", MB_YESNO | MB_ICONQUESTION ) == IDYES )
 				{
-					DestroyWindow(hwnd);
-					PostQuitMessage(0);
+					DestroyWindow( hwnd );
+					PostQuitMessage( 0 );
 				}
 			}
 			return 0;
 
 		case WM_DESTROY:
-			PostQuitMessage(0);
+			PostQuitMessage( 0 );
 			return 0;
 		}
-		return DefWindowProc(hwnd,
+		return DefWindowProc( hwnd,
 			msg,
 			wParam,
-			lParam);
+			lParam );
 	}
 
-	bool InitializeWindow(HINSTANCE hInstance, int nCmdShow, bool is_fullscreen, int& width, int& height, HWND& hwnd)
+	bool InitializeWindow( HINSTANCE hInstance, int nCmdShow, bool is_fullscreen, int& width, int& height, HWND& hwnd )
 	{
-		if (is_fullscreen)
+		if ( is_fullscreen )
 		{
-			HMONITOR hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-			MONITORINFO mi = { sizeof(mi) };
-			GetMonitorInfo(hmon, &mi);
+			HMONITOR hmon = MonitorFromWindow( hwnd, MONITOR_DEFAULTTONEAREST );
+			MONITORINFO mi = { sizeof( mi ) };
+			GetMonitorInfo( hmon, &mi );
 
 			width = mi.rcMonitor.right - mi.rcMonitor.left;
 			height = mi.rcMonitor.bottom - mi.rcMonitor.top;
 		}
 
 		WNDCLASSEX wc;
-		wc.cbSize = sizeof(WNDCLASSEX);
+		wc.cbSize = sizeof( WNDCLASSEX );
 		wc.style = CS_HREDRAW | CS_VREDRAW;
 		wc.lpfnWndProc = WndProc;
 		wc.cbClsExtra = NULL;
 		wc.cbWndExtra = NULL;
 		wc.hInstance = hInstance;
-		wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 2);
+		wc.hIcon = LoadIcon( NULL, IDI_APPLICATION );
+		wc.hCursor = LoadCursor( NULL, IDC_ARROW );
+		wc.hbrBackground = (HBRUSH) ( COLOR_WINDOW + 2 );
 		wc.lpszMenuName = NULL;
 		wc.lpszClassName = WindowName;
-		wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+		wc.hIconSm = LoadIcon( NULL, IDI_APPLICATION );
 
-		if (!RegisterClassEx(&wc))
+		if ( !RegisterClassEx( &wc ) )
 		{
-			MessageBox(NULL, L"Error registering window class",
-				L"Error", MB_OK | MB_ICONERROR);
+			MessageBox( NULL, L"Error registering window class",
+				L"Error", MB_OK | MB_ICONERROR );
 			return false;
 		}
 
-		hwnd = CreateWindowEx(NULL,
+		hwnd = CreateWindowEx( NULL,
 			WindowName,
 			WindowTitle,
 			WS_OVERLAPPEDWINDOW,
@@ -98,47 +99,47 @@ namespace
 			NULL,
 			NULL,
 			hInstance,
-			NULL);
+			NULL );
 
-		if (!hwnd)
+		if ( !hwnd )
 		{
-			MessageBox(NULL, L"Error creating window",
-				L"Error", MB_OK | MB_ICONERROR);
+			MessageBox( NULL, L"Error creating window",
+				L"Error", MB_OK | MB_ICONERROR );
 			return false;
 		}
 
-		if (is_fullscreen)
+		if ( is_fullscreen )
 		{
-			SetWindowLong(hwnd, GWL_STYLE, 0);
+			SetWindowLong( hwnd, GWL_STYLE, 0 );
 		}
 
-		ShowWindow(hwnd, nCmdShow);
-		UpdateWindow(hwnd);
+		ShowWindow( hwnd, nCmdShow );
+		UpdateWindow( hwnd );
 
 		return true;
 	}
 
-	bool MainLoop()
+	bool MainLoop( )
 	{
 		MSG msg;
-		ZeroMemory(&msg, sizeof(MSG));
+		ZeroMemory( &msg, sizeof( MSG ) );
 
-		while (true)
+		while ( true )
 		{
-			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+			if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
 			{
-				if (msg.message == WM_QUIT)
+				if ( msg.message == WM_QUIT )
 					break;
 
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
+				TranslateMessage( &msg );
+				DispatchMessage( &msg );
 			}
 			else
 			{
 				// run game code
-				if (!DXLayer::Update())
+				if ( !DXLayer::Update( ) )
 					return false;
-				if (!DXLayer::Render())
+				if ( !DXLayer::Render( ) )
 					return false;
 			}
 		}
@@ -147,7 +148,7 @@ namespace
 	}
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 {
 	int width = 800;
 	int height = 600;
@@ -155,26 +156,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 
 	HWND hWnd = NULL;
 
-	if (!InitializeWindow(hInstance, nCmdShow, is_fullscreen, width, height, hWnd))
+	if ( !InitializeWindow( hInstance, nCmdShow, is_fullscreen, width, height, hWnd ) )
 	{
-		MessageBox(0, L"Window initialization failed", L"Error", MB_OK);
+		MessageBox( 0, L"Window initialization failed", L"Error", MB_OK );
 		return 0;
 	}
 
-	if (!DXLayer::InitD3D(hWnd, width, height, is_fullscreen))
+	if ( !DXLayer::InitD3D( hWnd, width, height, is_fullscreen ) )
 	{
-		MessageBox(0, L"Failed to initialize D3D12", L"Error", MB_OK);
-		DXLayer::Cleanup();
+		MessageBox( 0, L"Failed to initialize D3D12", L"Error", MB_OK );
+		DXLayer::Cleanup( );
 		return 1;
 	}
 
-	if (!MainLoop())
+	if ( !MainLoop( ) )
 		return 1;
 
-	if (!DXLayer::WaitForPreviousFrame())
+	if ( !DXLayer::WaitForPreviousFrame( ) )
 		return 1;
 
-	CloseHandle(DXLayer::fence_event);
+	CloseHandle( DXLayer::fence_event );
 
 	return 0;
 }

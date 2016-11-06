@@ -2,19 +2,24 @@
 
 #include <windows.h>
 
+#include <DirectXMath.h>
+
 namespace DXLayer
 {
-	bool InitD3D(HWND window_handle, int width, int height, bool is_fullscreen); // initializes direct3d 12
+	// DXContext declarations, will likely be only one instance
 
-	bool Update(); // update the game logic
+	bool InitD3D( HWND window_handle, int width, int height, bool is_fullscreen ); // initializes direct3d 12
 
-	bool UpdatePipeline(); // update the direct3d pipeline (update command lists)
+	bool Update( ); // update the game logic
 
-	bool Render(); // execute the command list
+	bool UpdatePipeline( ); // update the direct3d pipeline (update command lists)
 
-	void Cleanup(); // release com ojects and clean up memory
+	bool Render( ); // execute the command list
 
-	bool WaitForPreviousFrame(); // wait until gpu is finished with command list
+	void Cleanup( ); // release com ojects and clean up memory
+
+	bool WaitForPreviousFrame( ); // wait until gpu is finished with command list
 
 	extern HANDLE fence_event;	// a handle to an event when our fence is unlocked by the gpu
-}
+
+	}

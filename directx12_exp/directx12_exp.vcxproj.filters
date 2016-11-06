@@ -19,6 +19,9 @@
     <Filter Include="dx12layer">
       <UniqueIdentifier>{c37ec26f-d86b-4e58-b3aa-563cd92cdcf3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{341ce8af-97a4-4611-b974-ca818125803b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -35,5 +38,13 @@
     <ClInclude Include="DXLayer.h">
       <Filter>dx12layer</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="vertex.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="pixel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
