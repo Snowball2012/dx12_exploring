@@ -58,25 +58,37 @@ namespace DXLayer
 	D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view; // a structure containing a pointer to the vertex data in gpu memory
 												 // the total size of the buffer, and the size of each element (vertex)
 
+	ID3D12Resource* index_buffer; // a default buffer in GPU memory that we will load index data for our triangle into
+
+	D3D12_INDEX_BUFFER_VIEW index_buffer_view; // a structure holding information about the index buffer
 
 	// this will only call release if an object exists (prevents exceptions calling release on non existant objects)
 #define SAFE_RELEASE(p) { if ( (p) ) { (p)->Release(); (p) = 0; } }
 
 	namespace
 	{
-		bool InitSimpleTriangle( )
+		bool InitSimpleQuad( )
 		{
 			HRESULT hr;
 			// Create vertex buffer
 
-			// a triangle
+			// a quad
 			Vertex v_list[] = {
-				{ 0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f },
+				{ -0.5f,  0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f },
 				{ 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f },
 				{ -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f },
+				{ 0.5f,  0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 1.0f }
 			};
 
 			int v_buffer_size = sizeof( v_list );
+
+			// Create index buffer
+			DWORD i_list[] = {
+				0, 1, 2,
+				0, 3, 1
+			};
+
+			int i_buffer_size = sizeof( i_list );
 
 			// create default heap
 			// default heap is memory on the GPU. Only the GPU has access to this memory
@@ -120,6 +132,42 @@ namespace DXLayer
 			// transition the vertex buffer data from copy destination state to vertex buffer state
 			command_list->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition( vertex_buffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER ) );
 
+			// create default heap to hold index buffer
+			device->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_DEFAULT ), // a default heap
+				D3D12_HEAP_FLAG_NONE, // no flags
+				&CD3DX12_RESOURCE_DESC::Buffer( i_buffer_size ), // resource description for a buffer
+				D3D12_RESOURCE_STATE_COPY_DEST, // start in the copy destination state
+				nullptr, // optimized clear value must be null for this type of resource
+				IID_PPV_ARGS( &index_buffer ) );
+
+			// we can give resource heaps a name so when we debug with the graphics debugger we know what resource we are looking at
+			index_buffer->SetName( L"Index Buffer Resource Heap" );
+
+			// create upload heap to upload index buffer
+			ID3D12Resource* i_buffer_upload_heap;
+			device->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ), // upload heap
+				D3D12_HEAP_FLAG_NONE, // no flags
+				&CD3DX12_RESOURCE_DESC::Buffer( i_buffer_size ), // resource description for a buffer
+				D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
+				nullptr,
+				IID_PPV_ARGS( &i_buffer_upload_heap ) );
+			i_buffer_upload_heap->SetName( L"Index Buffer Upload Resource Heap" );
+
+			// store index buffer in upload heap
+			D3D12_SUBRESOURCE_DATA index_data = { };
+			index_data.pData = reinterpret_cast<BYTE*>( i_list ); // pointer to our index array
+			index_data.RowPitch = i_buffer_size; // size of all our index buffer
+			index_data.SlicePitch = i_buffer_size; // also the size of our index buffer
+
+			// we are now creating a command with the command list to copy the data from
+			// the upload heap to the default heap
+			UpdateSubresources( command_list, index_buffer, i_buffer_upload_heap, 0, 0, 1, &index_data );
+
+			// transition the vertex buffer data from copy destination state to vertex buffer state
+			command_list->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition( index_buffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER ) );
+
 			// Now we execute the command list to upload the initial assets (triangle data)
 			command_list->Close( );
 			ID3D12CommandList* command_lists[] = { command_list };
@@ -138,18 +186,24 @@ namespace DXLayer
 			vertex_buffer_view.StrideInBytes = sizeof( Vertex );
 			vertex_buffer_view.SizeInBytes = v_buffer_size;
 
+			// create a index buffer view for the triangle. We get the GPU memory address to the vertex pointer using the GetGPUVirtualAddress() method
+			index_buffer_view.BufferLocation = index_buffer->GetGPUVirtualAddress( );
+			index_buffer_view.Format = DXGI_FORMAT_R32_UINT; // 32-bit unsigned integer (this is what a dword is, double word, a word is 2 bytes)
+			index_buffer_view.SizeInBytes = i_buffer_size;
+
 			return true;
 		}
 
-		bool DrawSimpleTriangle( )
+		bool DrawSimpleQuad( )
 		{
-			// draw triangle
+			// draw quad
 			command_list->SetGraphicsRootSignature( root_signature ); // set the root signature
 			command_list->RSSetViewports( 1, &viewport ); // set the viewports
 			command_list->RSSetScissorRects( 1, &scissor_rect ); // set the scissor rects
 			command_list->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST ); // set the primitive topology
 			command_list->IASetVertexBuffers( 0, 1, &vertex_buffer_view ); // set the vertex buffer (using the vertex buffer view)
-			command_list->DrawInstanced( 3, 1, 0, 0 ); // finally draw 3 vertices (draw the triangle)
+			command_list->IASetIndexBuffer( &index_buffer_view );
+			command_list->DrawIndexedInstanced( 6, 1, 0, 0, 0 ); // finally draw quad
 
 			return true;
 		}
@@ -466,7 +520,7 @@ namespace DXLayer
 		scissor_rect.right = width;
 		scissor_rect.bottom = height;
 
-		if ( !InitSimpleTriangle( ) )
+		if ( !InitSimpleQuad( ) )
 			return false;
 
 		return true;
@@ -521,7 +575,7 @@ namespace DXLayer
 		command_list->ClearRenderTargetView( rtv_handle, clearColor, 0, nullptr );
 		
 		// Draw simple green triangle
-		if ( !DrawSimpleTriangle( ) )
+		if ( !DrawSimpleQuad( ) )
 			return false;
 
 		// transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a
@@ -585,6 +639,7 @@ namespace DXLayer
 		SAFE_RELEASE( pipeline_state_object );
 		SAFE_RELEASE( root_signature );
 		SAFE_RELEASE( vertex_buffer );
+		SAFE_RELEASE( index_buffer );
 
 		for ( int i = 0; i < framebuffer_count; ++i )
 		{
